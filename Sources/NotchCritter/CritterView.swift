@@ -9,11 +9,11 @@ struct CritterView: View {
         HStack {
             Spacer()
             Text(emoji)
-                .font(.system(size: state.isExpanded ? 20 : 14))
+                .font(.system(size: state.isExpanded ? 50 : 32))
                 .animation(.spring(response: 0.35, dampingFraction: 0.6), value: state.isExpanded)
             Spacer()
         }
-        .frame(maxHeight: .infinity)
+        .frame(maxHeight: .infinity, alignment: .bottom)
         .background(Color.black.opacity(0.001)) // keeps the hosting view hit-testable-free but visible
     }
 
