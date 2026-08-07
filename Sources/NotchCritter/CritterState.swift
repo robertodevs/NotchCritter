@@ -19,7 +19,7 @@ final class CritterState: ObservableObject {
     // that the gap between two keystrokes in a normal typing cadence never
     // triggers it (each keystroke resets this timer via registerKeystroke).
     private let alertCooldown: TimeInterval = 0.6
-    private let idleTimeout: TimeInterval = 45
+    private let idleTimeout: TimeInterval = 20
 
     func registerKeystroke() {
         mood = .alert

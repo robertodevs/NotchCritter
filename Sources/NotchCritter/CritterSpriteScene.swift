@@ -10,7 +10,7 @@ final class CritterSpriteScene: SKScene {
 
     private static let loopActionKey = "loop"
     private static let yawnSchedulerActionKey = "yawnScheduler"
-    private static let yawnPauseRange: ClosedRange<TimeInterval> = 15...30
+    private static let yawnPauseRange: ClosedRange<TimeInterval> = 5...10
 
     override init() {
         super.init(size: CGSize(width: 240, height: 240))
