@@ -20,10 +20,35 @@ struct CritterView: View {
     var body: some View {
         HStack {
             Spacer()
+            // Constant frame; the grow/shrink look comes from scaleEffect,
+            // animated over the same duration as the window's own height
+            // animation (NotchWindowController), so they move in lockstep:
+            // it scales up from nothing as the window drops it into place,
+            // and hits 100% right as it arrives. Anchored at the bottom so
+            // it grows from (and shrinks back into) the notch, not the
+            // frame's center. Scale 0 also means it's genuinely invisible
+            // at rest regardless of exactly how the window is clipping it —
+            // hiding no longer depends on pixel-perfect window geometry.
             SpriteView(scene: scene, options: [.allowsTransparency])
-                .frame(width: state.isExpanded ? 56 : 28, height: state.isExpanded ? 56 : 28)
+                .frame(width: 56, height: 56)
+                .scaleEffect(state.isExpanded ? 1.0 : 0.0, anchor: .bottom)
+                // Appear: accelerating curve, so it feels like it's actually
+                // falling out of the notch rather than smoothly easing in.
+                // Hide: a slightly underdamped spring for an "ease out back"
+                // snap — settles with a small bounce instead of a flat stop.
+                // dampingFraction 0.7 keeps the overshoot mild (scale dips
+                // only a little below 0) rather than visibly flipping.
+                .animation(
+                    state.isExpanded
+                        ? .timingCurve(
+                            CritterAnimation.appearCurve.x1, CritterAnimation.appearCurve.y1,
+                            CritterAnimation.appearCurve.x2, CritterAnimation.appearCurve.y2,
+                            duration: CritterAnimation.transitionDuration
+                          )
+                        : .spring(response: CritterAnimation.transitionDuration, dampingFraction: 0.7),
+                    value: state.isExpanded
+                )
                 .offset(x: wanderOffset)
-                .animation(.spring(response: 0.35, dampingFraction: 0.6), value: state.isExpanded)
             Spacer()
         }
         .frame(maxHeight: .infinity, alignment: .bottom)
@@ -35,6 +60,9 @@ struct CritterView: View {
         .onChange(of: state.mood) { _, newMood in
             scene.update(mood: newMood)
             updateWandering(for: newMood)
+        }
+        .onChange(of: state.yawnTrigger) { _, _ in
+            scene.playYawn()
         }
         .onDisappear { wanderTimer?.invalidate() }
     }

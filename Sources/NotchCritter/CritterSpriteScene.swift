@@ -9,8 +9,6 @@ final class CritterSpriteScene: SKScene {
     private var currentMood: CritterMood?
 
     private static let loopActionKey = "loop"
-    private static let yawnSchedulerActionKey = "yawnScheduler"
-    private static let yawnPauseRange: ClosedRange<TimeInterval> = 5...10
 
     override init() {
         super.init(size: CGSize(width: 240, height: 240))
@@ -80,10 +78,6 @@ final class CritterSpriteScene: SKScene {
 
         spriteNode.removeAllActions()
         runLoop(textures: textures, timePerFrame: mood == .alert ? 0.12 : 0.22)
-
-        if mood == .idle {
-            scheduleYawn(idleTextures: textures)
-        }
     }
 
     private func runLoop(textures: [SKTexture], timePerFrame: TimeInterval) {
@@ -91,25 +85,17 @@ final class CritterSpriteScene: SKScene {
         spriteNode.run(.repeatForever(animation), withKey: Self.loopActionKey)
     }
 
-    /// Runs alongside the idle loop (separate action key) and, every so
-    /// often, swaps in the yawn frames for one pass before resuming the
-    /// idle loop. Bails out if the mood has since changed, since
-    /// `update(mood:)` already tore this scheduler down via
-    /// removeAllActions() in that case — the check just guards the brief
-    /// window where a pending action fires right as that happens.
-    private func scheduleYawn(idleTextures: [SKTexture]) {
-        guard !yawnTextures.isEmpty else { return }
-
-        let wait = SKAction.wait(forDuration: .random(in: Self.yawnPauseRange))
-        let playYawn = SKAction.run { [weak self] in
+    /// Plays the yawn frames once, then resumes the idle loop. Timing is
+    /// owned by CritterState (fires at a fixed delay after the last
+    /// keystroke); this just does the one-shot swap when told to. No-op
+    /// outside idle mood, since sleepy/alert have their own looks.
+    func playYawn() {
+        guard currentMood == .idle, !yawnTextures.isEmpty, let idleTextures = textureCache[.idle] else { return }
+        let yawn = SKAction.animate(with: yawnTextures, timePerFrame: 0.18, resize: false, restore: false)
+        let resumeIdle = SKAction.run { [weak self] in
             guard let self, self.currentMood == .idle else { return }
-            let yawn = SKAction.animate(with: self.yawnTextures, timePerFrame: 0.18, resize: false, restore: false)
-            let resumeIdle = SKAction.run { [weak self] in
-                guard let self, self.currentMood == .idle else { return }
-                self.runLoop(textures: idleTextures, timePerFrame: 0.22)
-            }
-            self.spriteNode.run(.sequence([yawn, resumeIdle]), withKey: Self.loopActionKey)
+            self.runLoop(textures: idleTextures, timePerFrame: 0.22)
         }
-        spriteNode.run(.repeatForever(.sequence([wait, playYawn])), withKey: Self.yawnSchedulerActionKey)
+        spriteNode.run(.sequence([yawn, resumeIdle]), withKey: Self.loopActionKey)
     }
 }
