@@ -9,7 +9,10 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "NotchCritter",
-            path: "Sources/NotchCritter"
+            path: "Sources/NotchCritter",
+            resources: [
+                .copy("Resources/Sprites")
+            ]
         )
     ]
 )

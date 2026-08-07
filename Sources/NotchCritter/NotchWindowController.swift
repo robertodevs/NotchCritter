@@ -16,11 +16,10 @@ final class NotchWindowController: NSWindowController {
     // or the content stays hidden behind the cutout.
     private let notchWidth: CGFloat = 200
     private let fallbackNotchHeight: CGFloat = 32
-    // Needs to clear the rendered height of the expanded emoji glyph
-    // (CritterView currently uses a 50pt font, ~50pt tall), not just be a
-    // stylistic "widen a bit" amount, or the top of the glyph still lands
-    // inside the notch cutout.
-    private let expandedExtraHeight: CGFloat = 56
+    // Needs to clear the rendered height of the expanded sprite (56pt box,
+    // CritterView.swift) with a few points of margin, or the top of the
+    // sprite (the character's head) still lands inside the notch cutout.
+    private let expandedExtraHeight: CGFloat = 64
 
     convenience init() {
         let window = NSWindow(
