@@ -42,9 +42,18 @@ Sources/NotchCritter/
   AppDelegate.swift          wires up the overlay window + status item
   NotchWindowController.swift  borderless window pinned over the notch
   CritterState.swift         mood/expansion state machine
-  CritterView.swift          SwiftUI rendering (placeholder emoji for now)
+  CritterView.swift          SwiftUI host for the sprite + idle wandering
+  CritterSpriteScene.swift   SpriteKit scene driving the frame animations
   KeystrokeMonitor.swift     CGEventTap-based typing activity signal
+  Resources/Sprites/         idle/alert/sleepy/yawn frame sets
 ```
+
+## Art
+
+Pixel-art frames for each mood, bundled as SPM resources and loaded by
+`CritterSpriteScene`:
+
+![idle, alert, sleepy, and yawn sprite frames](docs/sprite-art.png)
 
 ## Roadmap
 
