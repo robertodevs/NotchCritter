@@ -17,6 +17,14 @@ enum CritterAnimation {
     // Appear: starts slow and accelerates, like it's actually dropping out
     // of the notch under gravity rather than easing smoothly into place.
     static let appearCurve = (x1: 0.55, y1: 0.055, x2: 0.675, y2: 0.19)
+
+    // Retract splits transitionDuration into an anticipation "yank" beat
+    // (this fraction) followed by the rest as the hide beat — see
+    // CritterView.animateRetract. Kept here alongside the other shared
+    // timing values rather than local to CritterView, since it's still a
+    // slice of the one duration this enum exists to centralize.
+    static let retractYankFraction: Double = 0.35
+    static let retractYankScale = CGSize(width: 0.8, height: 1.25)
 }
 
 /// Drives the critter's behavior. Keystroke activity and idle time feed

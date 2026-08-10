@@ -10,11 +10,11 @@ unnoticed.
 
 ## Status
 
-Core loop working: window positioning respects the real notch geometry,
-the mood state machine reacts to typing, and the critter renders as an
-animated SpriteKit sprite (idle/alert/sleepy) that wanders and yawns
-when left idle. Multi-display support and a sleep-mode toggle are next
-— see Roadmap.
+Core loop working: window positioning respects the real notch geometry
+(including which display actually has the notch), the mood state machine
+reacts to typing, and the critter renders as an animated SpriteKit sprite
+(idle/alert/sleepy) that wanders and yawns when left idle. A sleep-mode
+toggle is next — see Roadmap.
 
 ## Requirements
 
@@ -58,9 +58,9 @@ Pixel-art frames for each mood, bundled as SPM resources and loaded by
 ## Roadmap
 
 - [x] Replace the emoji placeholder with real sprite art / SpriteKit scene
-- [ ] Smooth expand/collapse animation matching the real notch curvature
+- [x] Smooth expand/collapse animation matching the real notch curvature
 - [x] Idle behaviors (yawns, wandering) on a timer
-- [ ] Respect multiple displays / notchless Macs gracefully
+- [x] Respect multiple displays / notchless Macs gracefully
 - [ ] Menu bar toggle for "sleep mode" during screen shares
 
 ## License
