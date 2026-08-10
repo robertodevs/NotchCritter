@@ -61,6 +61,20 @@ final class NotchWindowController: NSWindowController {
         updateWindowFrame(expanded: critterState.isExpanded)
     }
 
+    /// Picks which screen to anchor the overlay to. NSScreen.main tracks
+    /// whichever screen currently has keyboard focus, which has nothing to
+    /// do with where the physical notch lives — on a multi-display rig the
+    /// user's focus is usually on an external monitor. Scanning for the
+    /// screen that actually reports a notch (safeAreaInsets.top > 0) finds
+    /// the built-in display regardless of focus, and keeps working as
+    /// displays are connected/disconnected. Falls back to .main / the first
+    /// available screen when no connected screen has a notch (external-only
+    /// clamshell setup, non-notched Mac), so the fallback top-center strip
+    /// still has somewhere to go instead of the window disappearing.
+    private func targetScreen() -> NSScreen? {
+        NSScreen.screens.first(where: { $0.safeAreaInsets.top > 0 }) ?? NSScreen.main ?? NSScreen.screens.first
+    }
+
     /// Sizes and positions the window over the built-in display's notch
     /// area, anchored to the notch's top edge. At rest, height matches the
     /// notch exactly (fully hidden behind the physical cutout). Expanded,
@@ -69,7 +83,7 @@ final class NotchWindowController: NSWindowController {
     /// top-center strip on notchless screens so the critter is still
     /// visible during development.
     private func updateWindowFrame(expanded: Bool) {
-        guard let window, let screen = NSScreen.main else { return }
+        guard let window, let screen = targetScreen() else { return }
 
         let topInset = screen.safeAreaInsets.top > 0 ? screen.safeAreaInsets.top : fallbackNotchHeight
         let height = expanded ? topInset + expandedExtraHeight : topInset - restingSafetyMargin
@@ -88,9 +102,13 @@ final class NotchWindowController: NSWindowController {
         // instead of two independently-timed animations racing each other.
         // Growing uses the same accelerating "falling" curve as the content
         // scale. Shrinking stays a plain ease-out (no overshoot) — the
-        // content's spring carries the "settle back" feel on that side, and
-        // an overshooting window height risks a visible clip glitch right
-        // as it's meant to vanish.
+        // content's own yank-then-hide shape (CritterView.animateRetract)
+        // carries the "reeled in" feel on that side, and an overshooting
+        // window height risks a visible clip glitch right as it's meant to
+        // vanish. The two don't need to match beat-for-beat: the window is
+        // already collapsing into the (undrawable) notch cutout well before
+        // the content animation finishes, so only the shared total duration
+        // matters for keeping them in lockstep, not the intermediate shape.
         NSAnimationContext.runAnimationGroup { context in
             context.duration = CritterAnimation.transitionDuration
             context.timingFunction = expanded
