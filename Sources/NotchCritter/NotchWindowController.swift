@@ -16,11 +16,16 @@ final class NotchWindowController: NSWindowController {
     // or the content stays hidden behind the cutout.
     private let notchWidth: CGFloat = 200
     private let fallbackNotchHeight: CGFloat = 32
-    // Needs to clear the rendered height of the expanded emoji glyph
-    // (CritterView currently uses a 50pt font, ~50pt tall), not just be a
-    // stylistic "widen a bit" amount, or the top of the glyph still lands
-    // inside the notch cutout.
-    private let expandedExtraHeight: CGFloat = 56
+    // Needs to clear the rendered height of the expanded sprite (56pt box,
+    // CritterView.swift) with a few points of margin, or the top of the
+    // sprite (the character's head) still lands inside the notch cutout.
+    private let expandedExtraHeight: CGFloat = 64
+    // screen.safeAreaInsets.top (32pt on this hardware) turned out to be a
+    // conservative/larger number than the actual non-drawable cutout —
+    // confirmed by photo: a window sized to exactly match it still showed
+    // the collapsed sprite peeking out below the notch. Shrinking the
+    // resting height by this margin keeps it safely inside the real cutout.
+    private let restingSafetyMargin: CGFloat = 14
 
     convenience init() {
         let window = NSWindow(
@@ -67,7 +72,7 @@ final class NotchWindowController: NSWindowController {
         guard let window, let screen = NSScreen.main else { return }
 
         let topInset = screen.safeAreaInsets.top > 0 ? screen.safeAreaInsets.top : fallbackNotchHeight
-        let height = expanded ? topInset + expandedExtraHeight : topInset
+        let height = expanded ? topInset + expandedExtraHeight : topInset - restingSafetyMargin
 
         let frame = NSRect(
             x: screen.frame.midX - notchWidth / 2,
@@ -75,6 +80,26 @@ final class NotchWindowController: NSWindowController {
             width: notchWidth,
             height: height
         )
-        window.setFrame(frame, display: true, animate: true)
+        // Explicit duration (matching CritterAnimation.transitionDuration,
+        // which CritterView's scale animation also uses) instead of plain
+        // animate:true/false — both the window growing/shrinking and the
+        // content scaling up/down start from the same isExpanded change and
+        // now run over the identical duration, so they land in lockstep
+        // instead of two independently-timed animations racing each other.
+        // Growing uses the same accelerating "falling" curve as the content
+        // scale. Shrinking stays a plain ease-out (no overshoot) — the
+        // content's spring carries the "settle back" feel on that side, and
+        // an overshooting window height risks a visible clip glitch right
+        // as it's meant to vanish.
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = CritterAnimation.transitionDuration
+            context.timingFunction = expanded
+                ? CAMediaTimingFunction(
+                    controlPoints: Float(CritterAnimation.appearCurve.x1), Float(CritterAnimation.appearCurve.y1),
+                    Float(CritterAnimation.appearCurve.x2), Float(CritterAnimation.appearCurve.y2)
+                  )
+                : CAMediaTimingFunction(name: .easeOut)
+            window.animator().setFrame(frame, display: true)
+        }
     }
 }

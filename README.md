@@ -10,9 +10,11 @@ unnoticed.
 
 ## Status
 
-Early scaffold. The window positioning, mood state machine, and keystroke
-monitor are stubbed in; the sprite art and real notch geometry handling
-are next.
+Core loop working: window positioning respects the real notch geometry,
+the mood state machine reacts to typing, and the critter renders as an
+animated SpriteKit sprite (idle/alert/sleepy) that wanders and yawns
+when left idle. Multi-display support and a sleep-mode toggle are next
+— see Roadmap.
 
 ## Requirements
 
@@ -40,15 +42,24 @@ Sources/NotchCritter/
   AppDelegate.swift          wires up the overlay window + status item
   NotchWindowController.swift  borderless window pinned over the notch
   CritterState.swift         mood/expansion state machine
-  CritterView.swift          SwiftUI rendering (placeholder emoji for now)
+  CritterView.swift          SwiftUI host for the sprite + idle wandering
+  CritterSpriteScene.swift   SpriteKit scene driving the frame animations
   KeystrokeMonitor.swift     CGEventTap-based typing activity signal
+  Resources/Sprites/         idle/alert/sleepy/yawn frame sets
 ```
+
+## Art
+
+Pixel-art frames for each mood, bundled as SPM resources and loaded by
+`CritterSpriteScene`:
+
+![idle, alert, sleepy, and yawn sprite frames](docs/sprite-art.png)
 
 ## Roadmap
 
-- [ ] Replace the emoji placeholder with real sprite art / SpriteKit scene
+- [x] Replace the emoji placeholder with real sprite art / SpriteKit scene
 - [ ] Smooth expand/collapse animation matching the real notch curvature
-- [ ] Idle behaviors (yawns, wandering) on a timer
+- [x] Idle behaviors (yawns, wandering) on a timer
 - [ ] Respect multiple displays / notchless Macs gracefully
 - [ ] Menu bar toggle for "sleep mode" during screen shares
 
